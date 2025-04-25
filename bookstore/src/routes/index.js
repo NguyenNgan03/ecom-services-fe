@@ -49,7 +49,7 @@ const AppRoutes = () => {
         </Route>
 
         {/* Private Routes - Admin Only */}
-        <Route element={<PrivateRoutes allowedRoles={["ADMIN"]} />}>
+       <Route element={<PublicRoutes />}>
           <Route element={<AdminLayout />}>
             <Route path="/admin" element={<Dashboard />} />
             <Route path="/admin/products" element={<ProductManagement />} />

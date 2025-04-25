@@ -2,7 +2,7 @@
 import { Link } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { addToCart } from "../../store/slices/cartSlice";
-import { ShoppingCart } from "lucide-react";
+import { ShoppingCart, Star } from "lucide-react";
 import Button from "../ui/Button";
 
 const ProductCard = ({ product }) => {
@@ -14,7 +14,7 @@ const ProductCard = ({ product }) => {
         id: product.id,
         name: product.name,
         price: product.price,
-        image: product.image,
+        image: product.imageUrl,
         quantity: 1,
       })
     );
@@ -24,7 +24,7 @@ const ProductCard = ({ product }) => {
     <div className="bg-white rounded-lg shadow-md overflow-hidden transition-transform duration-300 hover:shadow-lg hover:-translate-y-1">
       <Link to={`/product/${product.id}`}>
         <img
-          src={product.image || "/placeholder-product.jpg"}
+          src={product.imageUrl || "/placeholder-product.jpg"}
           alt={product.name}
           className="w-full h-48 object-cover"
         />
@@ -35,12 +35,34 @@ const ProductCard = ({ product }) => {
             {product.name}
           </h3>
         </Link>
+        <p className="text-sm text-gray-600 mb-1">{product.author}</p>
+        <p className="text-xs text-gray-500 mb-2">
+          Danh mục: {product.categoryName}
+        </p>
         <p className="text-sm text-gray-500 mb-2 line-clamp-2">
           {product.description}
         </p>
+
+        <div className="flex items-center mb-2">
+          <div className="flex text-yellow-400">
+            {[...Array(5)].map((_, i) => (
+              <Star
+                key={i}
+                className="h-4 w-4"
+                fill={
+                  i < (product.averageRating || 0) ? "currentColor" : "none"
+                }
+              />
+            ))}
+          </div>
+          <span className="text-xs text-gray-500 ml-1">
+            ({product.averageRating || 0})
+          </span>
+        </div>
+
         <div className="flex items-center justify-between mt-3">
           <span className="text-lg font-bold text-gray-900">
-            ${product.price.toFixed(2)}
+            {product.price.toLocaleString("vi-VN")} đ
           </span>
           <Button
             variant="primary"
@@ -49,11 +71,11 @@ const ProductCard = ({ product }) => {
             className="flex items-center"
           >
             <ShoppingCart className="h-4 w-4 mr-1" />
-            Add
+            Thêm
           </Button>
         </div>
-        {!product.stocked && (
-          <p className="text-sm text-red-500 mt-2">Out of stock</p>
+        {product.stock <= 0 && (
+          <p className="text-sm text-red-500 mt-2">Hết hàng</p>
         )}
       </div>
     </div>
