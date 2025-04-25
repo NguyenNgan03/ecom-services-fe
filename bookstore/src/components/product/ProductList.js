@@ -17,7 +17,7 @@ const ProductList = ({ products, loading, error }) => {
   if (error) {
     return (
       <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-4">
-        <p className="text-red-700">Error loading products: {error}</p>
+        <p className="text-red-700">Lỗi khi tải sản phẩm: {error}</p>
       </div>
     );
   }
@@ -25,7 +25,7 @@ const ProductList = ({ products, loading, error }) => {
   if (!products || products.length === 0) {
     return (
       <div className="text-center py-8">
-        <p className="text-gray-500">No products found.</p>
+        <p className="text-gray-500">Không tìm thấy sản phẩm nào.</p>
       </div>
     );
   }
