@@ -2,8 +2,9 @@
 import { Link } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { addToCart } from "../../store/slices/cartSlice";
-import { ShoppingCart, Star } from "lucide-react";
+import { ShoppingCart } from "lucide-react";
 import Button from "../ui/Button";
+import StarRating from "../review/StarRating";
 
 const ProductCard = ({ product }) => {
   const dispatch = useDispatch();
@@ -44,17 +45,7 @@ const ProductCard = ({ product }) => {
         </p>
 
         <div className="flex items-center mb-2">
-          <div className="flex text-yellow-400">
-            {[...Array(5)].map((_, i) => (
-              <Star
-                key={i}
-                className="h-4 w-4"
-                fill={
-                  i < (product.averageRating || 0) ? "currentColor" : "none"
-                }
-              />
-            ))}
-          </div>
+          <StarRating rating={product.averageRating || 0} size="small" />
           <span className="text-xs text-gray-500 ml-1">
             ({product.averageRating || 0})
           </span>

@@ -7,14 +7,16 @@ import { register, clearError } from "../../store/slices/authSlice";
 import Input from "../../components/ui/Input";
 import Button from "../../components/ui/Button";
 import Alert from "../../components/ui/Alert";
-import { User, Mail, Lock } from "lucide-react";
+import { User, Mail, Lock, Phone } from "lucide-react";
 
 const Register = () => {
   const [formData, setFormData] = useState({
-    name: "",
+    firstName: "",
+    lastName: "",
     email: "",
     password: "",
     confirmPassword: "",
+    phoneNumber: "",
   });
   const [formErrors, setFormErrors] = useState({});
 
@@ -58,24 +60,36 @@ const Register = () => {
   const validateForm = () => {
     const errors = {};
 
-    if (!formData.name.trim()) {
-      errors.name = "Name is required";
+    if (!formData.firstName.trim()) {
+      errors.firstName = "Tên là bắt buộc";
+    }
+
+    if (!formData.lastName.trim()) {
+      errors.lastName = "Họ là bắt buộc";
     }
 
     if (!formData.email.trim()) {
-      errors.email = "Email is required";
+      errors.email = "Email là bắt buộc";
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      errors.email = "Email is invalid";
+      errors.email = "Email không hợp lệ";
     }
 
     if (!formData.password) {
-      errors.password = "Password is required";
+      errors.password = "Mật khẩu là bắt buộc";
     } else if (formData.password.length < 6) {
-      errors.password = "Password must be at least 6 characters";
+      errors.password = "Mật khẩu phải có ít nhất 6 ký tự";
     }
 
     if (formData.password !== formData.confirmPassword) {
-      errors.confirmPassword = "Passwords do not match";
+      errors.confirmPassword = "Mật khẩu xác nhận không khớp";
+    }
+
+    if (!formData.phoneNumber.trim()) {
+      errors.phoneNumber = "Số điện thoại là bắt buộc";
+    } else if (
+      !/^[0-9]{10,11}$/.test(formData.phoneNumber.replace(/\s/g, ""))
+    ) {
+      errors.phoneNumber = "Số điện thoại không hợp lệ";
     }
 
     setFormErrors(errors);
@@ -97,15 +111,15 @@ const Register = () => {
       <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-lg shadow-md">
         <div className="text-center">
           <h2 className="text-3xl font-extrabold text-gray-900">
-            Create your account
+            Đăng ký tài khoản
           </h2>
           <p className="mt-2 text-sm text-gray-600">
-            Or{" "}
+            Hoặc{" "}
             <Link
               to="/login"
               className="font-medium text-blue-600 hover:text-blue-500"
             >
-              sign in to your existing account
+              đăng nhập với tài khoản hiện có
             </Link>
           </p>
         </div>
@@ -120,19 +134,36 @@ const Register = () => {
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="rounded-md shadow-sm space-y-4">
-            <div className="relative">
-              <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-              <Input
-                id="name"
-                name="name"
-                type="text"
-                placeholder="Full name"
-                value={formData.name}
-                onChange={handleChange}
-                error={formErrors.name}
-                className="pl-10"
-                required
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                <Input
+                  id="firstName"
+                  name="firstName"
+                  type="text"
+                  placeholder="Tên"
+                  value={formData.firstName}
+                  onChange={handleChange}
+                  error={formErrors.firstName}
+                  className="pl-10"
+                  required
+                />
+              </div>
+
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                <Input
+                  id="lastName"
+                  name="lastName"
+                  type="text"
+                  placeholder="Họ"
+                  value={formData.lastName}
+                  onChange={handleChange}
+                  error={formErrors.lastName}
+                  className="pl-10"
+                  required
+                />
+              </div>
             </div>
 
             <div className="relative">
@@ -141,10 +172,25 @@ const Register = () => {
                 id="email"
                 name="email"
                 type="email"
-                placeholder="Email address"
+                placeholder="Địa chỉ email"
                 value={formData.email}
                 onChange={handleChange}
                 error={formErrors.email}
+                className="pl-10"
+                required
+              />
+            </div>
+
+            <div className="relative">
+              <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+              <Input
+                id="phoneNumber"
+                name="phoneNumber"
+                type="tel"
+                placeholder="Số điện thoại"
+                value={formData.phoneNumber}
+                onChange={handleChange}
+                error={formErrors.phoneNumber}
                 className="pl-10"
                 required
               />
@@ -156,7 +202,7 @@ const Register = () => {
                 id="password"
                 name="password"
                 type="password"
-                placeholder="Password"
+                placeholder="Mật khẩu"
                 value={formData.password}
                 onChange={handleChange}
                 error={formErrors.password}
@@ -171,7 +217,7 @@ const Register = () => {
                 id="confirmPassword"
                 name="confirmPassword"
                 type="password"
-                placeholder="Confirm password"
+                placeholder="Xác nhận mật khẩu"
                 value={formData.confirmPassword}
                 onChange={handleChange}
                 error={formErrors.confirmPassword}
@@ -183,7 +229,7 @@ const Register = () => {
 
           <div>
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Creating account..." : "Create account"}
+              {loading ? "Đang tạo tài khoản..." : "Đăng ký"}
             </Button>
           </div>
         </form>
