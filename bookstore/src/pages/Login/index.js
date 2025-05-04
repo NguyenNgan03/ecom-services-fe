@@ -1,7 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import {
+  Link,
+  useNavigate,
+  useLocation,
+  useSearchParams,
+} from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { login, clearError } from "../../store/slices/authSlice";
 import Input from "../../components/ui/Input";
@@ -15,14 +20,23 @@ const Login = () => {
     password: "",
   });
   const [formErrors, setFormErrors] = useState({});
+  const [sessionExpired, setSessionExpired] = useState(false);
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
 
   const { loading, error, isAuthenticated } = useSelector(
     (state) => state.auth
   );
+
+  // Kiểm tra xem có thông báo session expired không
+  useEffect(() => {
+    if (searchParams.get("session") === "expired") {
+      setSessionExpired(true);
+    }
+  }, [searchParams]);
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -53,19 +67,24 @@ const Login = () => {
         [name]: "",
       }));
     }
+
+    // Clear session expired message when user types
+    if (sessionExpired) {
+      setSessionExpired(false);
+    }
   };
 
   const validateForm = () => {
     const errors = {};
 
     if (!formData.email.trim()) {
-      errors.email = "Email is required";
+      errors.email = "Email là bắt buộc";
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      errors.email = "Email is invalid";
+      errors.email = "Email không hợp lệ";
     }
 
     if (!formData.password) {
-      errors.password = "Password is required";
+      errors.password = "Mật khẩu là bắt buộc";
     }
 
     setFormErrors(errors);
@@ -84,16 +103,14 @@ const Login = () => {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-lg shadow-md">
         <div className="text-center">
-          <h2 className="text-3xl font-extrabold text-gray-900">
-            Sign in to your account
-          </h2>
+          <h2 className="text-3xl font-extrabold text-gray-900">Đăng nhập</h2>
           <p className="mt-2 text-sm text-gray-600">
-            Or{" "}
+            Hoặc{" "}
             <Link
               to="/register"
               className="font-medium text-blue-600 hover:text-blue-500"
             >
-              create a new account
+              tạo tài khoản mới
             </Link>
           </p>
         </div>
@@ -106,6 +123,14 @@ const Login = () => {
           />
         )}
 
+        {sessionExpired && (
+          <Alert
+            type="warning"
+            message="Phiên đăng nhập của bạn đã hết hạn. Vui lòng đăng nhập lại."
+            onClose={() => setSessionExpired(false)}
+          />
+        )}
+
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="rounded-md shadow-sm space-y-4">
             <div className="relative">
@@ -114,7 +139,7 @@ const Login = () => {
                 id="email"
                 name="email"
                 type="email"
-                placeholder="Email address"
+                placeholder="Địa chỉ email"
                 value={formData.email}
                 onChange={handleChange}
                 error={formErrors.email}
@@ -129,7 +154,7 @@ const Login = () => {
                 id="password"
                 name="password"
                 type="password"
-                placeholder="Password"
+                placeholder="Mật khẩu"
                 value={formData.password}
                 onChange={handleChange}
                 error={formErrors.password}
@@ -151,7 +176,7 @@ const Login = () => {
                 htmlFor="remember-me"
                 className="ml-2 block text-sm text-gray-900"
               >
-                Remember me
+                Ghi nhớ đăng nhập
               </label>
             </div>
 
@@ -160,14 +185,14 @@ const Login = () => {
                 href="#"
                 className="font-medium text-blue-600 hover:text-blue-500"
               >
-                Forgot your password?
+                Quên mật khẩu?
               </a>
             </div>
           </div>
 
           <div>
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Signing in..." : "Sign in"}
+              {loading ? "Đang đăng nhập..." : "Đăng nhập"}
             </Button>
           </div>
         </form>

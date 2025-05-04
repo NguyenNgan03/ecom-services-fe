@@ -3,35 +3,49 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchProductById } from "../../store/slices/productSlice";
+import { fetchProductDetails } from "../../store/slices/productSlice";
 import { addToCart } from "../../store/slices/cartSlice";
 import {
   ShoppingCart,
   Heart,
   Share2,
   ArrowLeft,
-  Star,
   BookOpen,
   Calendar,
   Tag,
+  MessageSquare,
 } from "lucide-react";
 import Button from "../../components/ui/Button";
 import LoadingSpinner from "../../components/ui/LoadingSpinner";
+import ReviewList from "../../components/review/ReviewList";
+import ReviewForm from "../../components/review/ReviewForm";
+import StarRating from "../../components/review/StarRating";
 
 const ProductDetail = () => {
   const { productId } = useParams();
   const dispatch = useDispatch();
-  const { product, loading, error } = useSelector((state) => state.products);
+  const { product, productReviews, loading, error } = useSelector(
+    (state) => state.products
+  );
   const [quantity, setQuantity] = useState(1);
+  const [activeTab, setActiveTab] = useState("description");
+  const [reviews, setReviews] = useState([]);
 
   useEffect(() => {
     if (productId) {
-      dispatch(fetchProductById(productId));
+      dispatch(fetchProductDetails(productId));
     }
 
     // Scroll to top when component mounts
     window.scrollTo(0, 0);
   }, [dispatch, productId]);
+
+  // Cập nhật reviews khi productReviews thay đổi
+  useEffect(() => {
+    if (productReviews) {
+      setReviews(productReviews);
+    }
+  }, [productReviews]);
 
   const handleAddToCart = () => {
     if (product) {
@@ -52,6 +66,10 @@ const ProductDetail = () => {
     if (value > 0) {
       setQuantity(value);
     }
+  };
+
+  const handleReviewAdded = (newReview) => {
+    setReviews((prevReviews) => [...prevReviews, newReview]);
   };
 
   if (loading) {
@@ -101,7 +119,7 @@ const ProductDetail = () => {
         Quay lại trang chủ
       </Link>
 
-      <div className="bg-white rounded-lg shadow-md overflow-hidden">
+      <div className="bg-white rounded-lg shadow-md overflow-hidden mb-8">
         <div className="md:flex">
           {/* Product Image */}
           <div className="md:w-1/2">
@@ -119,19 +137,7 @@ const ProductDetail = () => {
                 {product.name}
               </h1>
               <div className="flex items-center mb-2">
-                <div className="flex text-yellow-400">
-                  {[...Array(5)].map((_, i) => (
-                    <Star
-                      key={i}
-                      className="h-5 w-5"
-                      fill={
-                        i < (product.averageRating || 0)
-                          ? "currentColor"
-                          : "none"
-                      }
-                    />
-                  ))}
-                </div>
+                <StarRating rating={product.averageRating || 0} />
                 <span className="text-gray-500 ml-2">
                   {product.averageRating || 0} đánh giá
                 </span>
@@ -224,6 +230,80 @@ const ProductDetail = () => {
               </Button>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Tabs for Description and Reviews */}
+      <div className="bg-white rounded-lg shadow-md overflow-hidden">
+        <div className="border-b border-gray-200">
+          <nav className="flex -mb-px">
+            <button
+              onClick={() => setActiveTab("description")}
+              className={`py-4 px-6 text-center border-b-2 font-medium text-sm ${
+                activeTab === "description"
+                  ? "border-blue-500 text-blue-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              }`}
+            >
+              Mô tả sản phẩm
+            </button>
+            <button
+              onClick={() => setActiveTab("reviews")}
+              className={`py-4 px-6 text-center border-b-2 font-medium text-sm flex items-center ${
+                activeTab === "reviews"
+                  ? "border-blue-500 text-blue-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              }`}
+            >
+              <MessageSquare className="h-4 w-4 mr-2" />
+              Đánh giá
+            </button>
+          </nav>
+        </div>
+
+        <div className="p-6">
+          {activeTab === "description" ? (
+            <div className="prose max-w-none">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">
+                Chi tiết sản phẩm
+              </h3>
+              <p className="text-gray-700">{product.description}</p>
+
+              {/* Thêm thông tin chi tiết khác nếu có */}
+              <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <h4 className="text-sm font-medium text-gray-900">
+                    Thông tin sản phẩm
+                  </h4>
+                  <ul className="mt-2 space-y-2 text-sm text-gray-700">
+                    <li>Tác giả: {product.author}</li>
+                    <li>Danh mục: {product.categoryName}</li>
+                    <li>
+                      Ngày phát hành:{" "}
+                      {new Date(product.createdAt).toLocaleDateString("vi-VN")}
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div>
+              <h3 className="text-lg font-medium text-gray-900 mb-4">
+                Đánh giá từ khách hàng
+              </h3>
+
+              {/* Review Form */}
+              <div className="mb-8">
+                <ReviewForm
+                  productId={product.id}
+                  onReviewAdded={handleReviewAdded}
+                />
+              </div>
+
+              {/* Review List */}
+              <ReviewList productId={product.id} reviews={reviews} />
+            </div>
+          )}
         </div>
       </div>
     </div>
