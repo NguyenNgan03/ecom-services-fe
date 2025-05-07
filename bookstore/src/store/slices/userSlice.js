@@ -24,6 +24,17 @@ export const fetchUserById = createAsyncThunk(
   }
 );
 
+export const createUser = createAsyncThunk(
+  "users/createUser",
+  async (userData, { rejectWithValue }) => {
+    try {
+      return await userService.createUser(userData);
+    } catch (error) {
+      return rejectWithValue(error.response?.data || "Failed to create user");
+    }
+  }
+);
+
 export const updateUser = createAsyncThunk(
   "users/updateUser",
   async ({ id, userData }, { rejectWithValue }) => {
@@ -47,11 +58,38 @@ export const deleteUser = createAsyncThunk(
   }
 );
 
+export const fetchCurrentUserProfile = createAsyncThunk(
+  "users/fetchCurrentUserProfile",
+  async (_, { rejectWithValue }) => {
+    try {
+      return await userService.getCurrentUserProfile();
+    } catch (error) {
+      return rejectWithValue(error.response?.data || "Failed to fetch profile");
+    }
+  }
+);
+
+export const updateCurrentUserProfile = createAsyncThunk(
+  "users/updateCurrentUserProfile",
+  async (userData, { rejectWithValue }) => {
+    try {
+      return await userService.updateCurrentUserProfile(userData);
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data || "Failed to update profile"
+      );
+    }
+  }
+);
+
 const initialState = {
   users: [],
   user: null,
+  currentUserProfile: null,
   loading: false,
   error: null,
+  profileLoading: false,
+  profileError: null,
 };
 
 const userSlice = createSlice({
@@ -63,6 +101,9 @@ const userSlice = createSlice({
     },
     clearCurrentUser: (state) => {
       state.user = null;
+    },
+    clearProfileError: (state) => {
+      state.profileError = null;
     },
   },
   extraReducers: (builder) => {
@@ -90,6 +131,19 @@ const userSlice = createSlice({
         state.user = action.payload;
       })
       .addCase(fetchUserById.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      // Create user
+      .addCase(createUser.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(createUser.fulfilled, (state, action) => {
+        state.loading = false;
+        state.users.push(action.payload);
+      })
+      .addCase(createUser.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
@@ -124,9 +178,36 @@ const userSlice = createSlice({
       .addCase(deleteUser.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+      })
+      // Fetch current user profile
+      .addCase(fetchCurrentUserProfile.pending, (state) => {
+        state.profileLoading = true;
+        state.profileError = null;
+      })
+      .addCase(fetchCurrentUserProfile.fulfilled, (state, action) => {
+        state.profileLoading = false;
+        state.currentUserProfile = action.payload;
+      })
+      .addCase(fetchCurrentUserProfile.rejected, (state, action) => {
+        state.profileLoading = false;
+        state.profileError = action.payload;
+      })
+      // Update current user profile
+      .addCase(updateCurrentUserProfile.pending, (state) => {
+        state.profileLoading = true;
+        state.profileError = null;
+      })
+      .addCase(updateCurrentUserProfile.fulfilled, (state, action) => {
+        state.profileLoading = false;
+        state.currentUserProfile = action.payload;
+      })
+      .addCase(updateCurrentUserProfile.rejected, (state, action) => {
+        state.profileLoading = false;
+        state.profileError = action.payload;
       });
   },
 });
 
-export const { clearUserError, clearCurrentUser } = userSlice.actions;
+export const { clearUserError, clearCurrentUser, clearProfileError } =
+  userSlice.actions;
 export default userSlice.reducer;

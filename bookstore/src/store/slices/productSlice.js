@@ -4,14 +4,19 @@ import productService from "../../services/productService";
 // Async thunks
 export const fetchProducts = createAsyncThunk(
   "products/fetchProducts",
-  async (_, { rejectWithValue }) => {
+  async (options = {}, { rejectWithValue }) => {
     try {
-      // Ưu tiên lấy sản phẩm nổi bật trước
+      // If fetchAll option is true (for admin dashboard), get all products
+      if (options.fetchAll) {
+        return await productService.getAllProducts();
+      }
+
+      // For homepage: prioritize featured products
       const featuredProducts = await productService.getFeaturedProducts();
       if (featuredProducts.length > 0) {
         return featuredProducts;
       }
-      // Nếu không có sản phẩm nổi bật, lấy tất cả sản phẩm
+      // If no featured products, get all products
       return await productService.getAllProducts();
     } catch (error) {
       return rejectWithValue(

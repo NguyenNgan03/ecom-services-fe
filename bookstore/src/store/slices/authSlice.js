@@ -81,6 +81,7 @@ const initialState = {
   isAdmin: userInfo?.role === "admin", // Kiểm tra quyền admin
   loading: false,
   error: null,
+  redirectPath: null, // Đường dẫn chuyển hướng sau đăng nhập
 };
 
 const authSlice = createSlice({
@@ -96,6 +97,9 @@ const authSlice = createSlice({
         state.userInfo = userInfo;
         state.isAdmin = userInfo?.role === "admin";
       }
+    },
+    clearRedirectPath: (state) => {
+      state.redirectPath = null;
     },
   },
   extraReducers: (builder) => {
@@ -116,6 +120,13 @@ const authSlice = createSlice({
           const userInfo = getUserInfoFromToken(action.payload.token);
           state.userInfo = userInfo;
           state.isAdmin = userInfo?.role === "admin";
+
+          // Set đường dẫn chuyển hướng dựa trên vai trò
+          if (userInfo?.role === "admin") {
+            state.redirectPath = "/admin";
+          } else {
+            state.redirectPath = "/";
+          }
         }
       })
       .addCase(login.rejected, (state, action) => {
@@ -138,6 +149,9 @@ const authSlice = createSlice({
           const userInfo = getUserInfoFromToken(action.payload.token);
           state.userInfo = userInfo;
           state.isAdmin = userInfo?.role === "admin";
+
+          // Người dùng mới đăng ký thường là customer
+          state.redirectPath = "/";
         }
       })
       .addCase(register.rejected, (state, action) => {
@@ -166,10 +180,12 @@ const authSlice = createSlice({
         state.userInfo = null;
         state.isAuthenticated = false;
         state.isAdmin = false;
+        state.redirectPath = "/login";
         setAuthToken(null);
       });
   },
 });
 
-export const { clearError, updateUserInfo } = authSlice.actions;
+export const { clearError, updateUserInfo, clearRedirectPath } =
+  authSlice.actions;
 export default authSlice.reducer;

@@ -10,6 +10,8 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
+  Shield,
+  BookOpen,
 } from "lucide-react";
 
 const Sidebar = () => {
@@ -28,27 +30,33 @@ const Sidebar = () => {
 
   const menuItems = [
     { path: "/admin", icon: <Home size={20} />, label: "Dashboard" },
-    { path: "/admin/products", icon: <Package size={20} />, label: "Products" },
-    { path: "/admin/categories", icon: <Tag size={20} />, label: "Categories" },
-    { path: "/admin/customers", icon: <Users size={20} />, label: "Customers" },
+    { path: "/admin/products", icon: <Package size={20} />, label: "Sản phẩm" },
+    { path: "/admin/categories", icon: <Tag size={20} />, label: "Danh mục" },
     {
-      path: "/admin/settings",
-      icon: <Settings size={20} />,
-      label: "Settings",
+      path: "/admin/customers",
+      icon: <Users size={20} />,
+      label: "Người dùng",
     },
+    { path: "/admin/roles", icon: <Shield size={20} />, label: "Vai trò" },
+    { path: "/admin/settings", icon: <Settings size={20} />, label: "Cài đặt" },
   ];
 
   return (
     <aside
-      className={`bg-gray-800 text-white transition-all duration-300 ${
+      className={`bg-[#626F47] text-white h-full ${
         collapsed ? "w-16" : "w-64"
-      }`}
+      } transition-all duration-300`}
     >
-      <div className="h-16 flex items-center justify-between px-4 border-b border-gray-700">
-        {!collapsed && <span className="text-xl font-bold">E-Shop Admin</span>}
+      <div className="h-16 flex items-center justify-between px-4 border-b border-[#A4B465]">
+        {!collapsed && (
+          <div className="flex items-center">
+            <BookOpen className="h-6 w-6 text-[#F0BB78]" />
+            <span className="text-xl font-bold ml-2">BookStore</span>
+          </div>
+        )}
         <button
           onClick={toggleSidebar}
-          className="p-1 rounded-full text-gray-400 hover:text-white focus:outline-none"
+          className="p-1 rounded-full text-[#F5ECD5] hover:text-[#F0BB78] focus:outline-none transition-colors duration-300"
         >
           {collapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
         </button>
@@ -56,17 +64,24 @@ const Sidebar = () => {
       <nav className="mt-5">
         <ul className="space-y-2 px-2">
           {menuItems.map((item) => (
-            <li key={item.path}>
+            <li
+              key={item.path}
+              className="transform hover:translate-x-1 transition-transform duration-200"
+            >
               <Link
                 to={item.path}
                 className={`flex items-center p-2 rounded-md transition-colors ${
                   isActive(item.path)
-                    ? "bg-blue-600 text-white"
-                    : "text-gray-300 hover:bg-gray-700"
+                    ? "bg-[#A4B465] text-white"
+                    : "text-[#F5ECD5] hover:bg-[#A4B465]/50"
                 }`}
               >
                 <span className="mr-3">{item.icon}</span>
-                {!collapsed && <span>{item.label}</span>}
+                {!collapsed && (
+                  <span className="transition-opacity duration-200">
+                    {item.label}
+                  </span>
+                )}
               </Link>
             </li>
           ))}

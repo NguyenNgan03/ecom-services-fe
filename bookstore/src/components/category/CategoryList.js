@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { BookOpen } from "lucide-react";
 
 const CategoryList = ({ categories, loading, error }) => {
   if (loading) {
@@ -7,7 +8,8 @@ const CategoryList = ({ categories, loading, error }) => {
         {[...Array(5)].map((_, index) => (
           <div
             key={index}
-            className="flex-shrink-0 w-40 h-24 bg-gray-100 rounded-lg animate-pulse"
+            className="flex-shrink-0 w-40 h-24 bg-white rounded-lg animate-pulse"
+            style={{ animationDelay: `${index * 0.1}s` }}
           ></div>
         ))}
       </div>
@@ -16,8 +18,8 @@ const CategoryList = ({ categories, loading, error }) => {
 
   if (error) {
     return (
-      <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-4">
-        <p className="text-red-700">Error loading categories: {error}</p>
+      <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-4 rounded-md">
+        <p className="text-red-700">Lỗi khi tải danh mục: {error}</p>
       </div>
     );
   }
@@ -25,25 +27,31 @@ const CategoryList = ({ categories, loading, error }) => {
   if (!categories || categories.length === 0) {
     return (
       <div className="text-center py-4">
-        <p className="text-gray-500">No categories found.</p>
+        <p className="text-gray-500">Không tìm thấy danh mục nào.</p>
       </div>
     );
   }
 
   return (
-    <div className="flex overflow-x-auto space-x-4 pb-4">
-      {categories.map((category) => (
-        <Link
+    <div className="flex overflow-x-auto space-x-4 pb-4 hide-scrollbar">
+      {categories.map((category, index) => (
+        <div
           key={category.id}
-          to={`/category/${category.id}`}
-          className="flex-shrink-0 w-40 h-24 bg-white rounded-lg shadow-md overflow-hidden transition-transform hover:shadow-lg hover:-translate-y-1"
+          className="opacity-0 animate-fadeIn"
+          style={{ animation: `fadeIn 0.5s ${index * 0.1}s forwards` }}
         >
-          <div className="h-full flex flex-col items-center justify-center p-4">
-            <span className="text-center font-medium text-gray-800">
-              {category.name}
-            </span>
-          </div>
-        </Link>
+          <Link
+            to={`/category/${category.id}`}
+            className="flex-shrink-0 w-40 h-24 bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300 hover:shadow-lg hover:bg-[#F5ECD5] group"
+          >
+            <div className="h-full flex flex-col items-center justify-center p-4 relative">
+              <BookOpen className="h-8 w-8 text-[#A4B465] mb-2 group-hover:text-[#626F47] transition-colors duration-300" />
+              <span className="text-center font-medium text-[#626F47] group-hover:text-[#A4B465] transition-colors duration-300">
+                {category.name}
+              </span>
+            </div>
+          </Link>
+        </div>
       ))}
     </div>
   );
