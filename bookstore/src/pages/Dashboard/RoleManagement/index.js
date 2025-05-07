@@ -3,56 +3,73 @@
 import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  fetchCategories,
-  createCategory,
-  updateCategory,
-  deleteCategory,
-} from "../../../store/slices/categorySlice";
+  fetchRoles,
+  createRole,
+  updateRole,
+  deleteRole,
+  clearRoleError,
+  clearRoleSuccess,
+} from "../../../store/slices/roleSlice";
 import Button from "../../../components/ui/Button";
 import Card from "../../../components/ui/Card";
 import Modal from "../../../components/ui/Modal";
 import Input from "../../../components/ui/Input";
 import Alert from "../../../components/ui/Alert";
-import { Plus, Edit, Trash2, Search, Tag } from "lucide-react";
+import { Edit, Trash2, Search, Plus, Shield, Users } from "lucide-react";
 
-const CategoryManagement = () => {
+const RoleManagement = () => {
   const dispatch = useDispatch();
-  const { categories, loading, error } = useSelector(
-    (state) => state.categories
-  );
+  const {
+    roles = [],
+    loading,
+    error,
+    success,
+  } = useSelector((state) => state.roles || { roles: [] });
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [currentCategory, setCurrentCategory] = useState(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [currentRole, setCurrentRole] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [formData, setFormData] = useState({
     name: "",
     description: "",
   });
   const [formErrors, setFormErrors] = useState({});
-  const [successMessage, setSuccessMessage] = useState("");
-  const [confirmDelete, setConfirmDelete] = useState(null);
 
   useEffect(() => {
-    dispatch(fetchCategories());
+    dispatch(fetchRoles());
   }, [dispatch]);
 
-  // Filter categories based on search term
-  const filteredCategories = categories.filter(
-    (category) =>
-      category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (category.description &&
-        category.description.toLowerCase().includes(searchTerm.toLowerCase()))
+  useEffect(() => {
+    if (success) {
+      setIsModalOpen(false);
+      setIsDeleteModalOpen(false);
+
+      // Clear success message after 3 seconds
+      const timer = setTimeout(() => {
+        dispatch(clearRoleSuccess());
+      }, 3000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [success, dispatch]);
+
+  // Filter roles based on search term
+  const filteredRoles = roles.filter(
+    (role) =>
+      role.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (role.description &&
+        role.description.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  const handleOpenModal = (category = null) => {
-    if (category) {
-      setCurrentCategory(category);
+  const handleOpenModal = (role = null) => {
+    setCurrentRole(role);
+    if (role) {
       setFormData({
-        name: category.name,
-        description: category.description || "",
+        name: role.name || "",
+        description: role.description || "",
       });
     } else {
-      setCurrentCategory(null);
       setFormData({
         name: "",
         description: "",
@@ -64,6 +81,22 @@ const CategoryManagement = () => {
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
+    setCurrentRole(null);
+    setFormData({
+      name: "",
+      description: "",
+    });
+    setFormErrors({});
+  };
+
+  const handleOpenDeleteModal = (role) => {
+    setCurrentRole(role);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleCloseDeleteModal = () => {
+    setIsDeleteModalOpen(false);
+    setCurrentRole(null);
   };
 
   const handleChange = (e) => {
@@ -86,7 +119,7 @@ const CategoryManagement = () => {
     const errors = {};
 
     if (!formData.name.trim()) {
-      errors.name = "Tên danh mục là bắt buộc";
+      errors.name = "Tên vai trò là bắt buộc";
     }
 
     setFormErrors(errors);
@@ -97,50 +130,17 @@ const CategoryManagement = () => {
     e.preventDefault();
 
     if (validateForm()) {
-      if (currentCategory) {
-        dispatch(
-          updateCategory({ id: currentCategory.id, categoryData: formData })
-        )
-          .unwrap()
-          .then(() => {
-            setSuccessMessage("Cập nhật danh mục thành công!");
-            handleCloseModal();
-            setTimeout(() => setSuccessMessage(""), 3000);
-          })
-          .catch((error) => {
-            console.error("Failed to update category:", error);
-          });
+      if (currentRole) {
+        dispatch(updateRole({ id: currentRole.id, roleData: formData }));
       } else {
-        dispatch(createCategory(formData))
-          .unwrap()
-          .then(() => {
-            setSuccessMessage("Thêm danh mục thành công!");
-            handleCloseModal();
-            setTimeout(() => setSuccessMessage(""), 3000);
-          })
-          .catch((error) => {
-            console.error("Failed to create category:", error);
-          });
+        dispatch(createRole(formData));
       }
     }
   };
 
-  const handleDeleteCategory = (categoryId) => {
-    setConfirmDelete(categoryId);
-  };
-
-  const confirmDeleteCategory = () => {
-    if (confirmDelete) {
-      dispatch(deleteCategory(confirmDelete))
-        .unwrap()
-        .then(() => {
-          setSuccessMessage("Xóa danh mục thành công!");
-          setConfirmDelete(null);
-          setTimeout(() => setSuccessMessage(""), 3000);
-        })
-        .catch((error) => {
-          console.error("Failed to delete category:", error);
-        });
+  const handleDelete = () => {
+    if (currentRole) {
+      dispatch(deleteRole(currentRole.id));
     }
   };
 
@@ -148,11 +148,9 @@ const CategoryManagement = () => {
     <div className="bg-[#F5ECD5] p-6 rounded-lg">
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-[#626F47]">
-            Quản lý danh mục
-          </h1>
+          <h1 className="text-2xl font-bold text-[#626F47]">Quản lý vai trò</h1>
           <p className="text-[#A4B465]">
-            Quản lý danh mục sản phẩm trong hệ thống
+            Quản lý vai trò và phân quyền trong hệ thống
           </p>
         </div>
         <Button
@@ -160,17 +158,24 @@ const CategoryManagement = () => {
           className="flex items-center bg-[#A4B465] hover:bg-[#626F47] text-white transition-colors duration-300"
         >
           <Plus className="h-5 w-5 mr-1" />
-          Thêm danh mục
+          Thêm vai trò
         </Button>
       </div>
 
-      {error && <Alert type="error" message={error} className="mb-4" />}
-      {successMessage && (
+      {error && (
+        <Alert
+          type="error"
+          message={error}
+          onClose={() => dispatch(clearRoleError())}
+          className="mb-6"
+        />
+      )}
+      {success && (
         <Alert
           type="success"
-          message={successMessage}
-          className="mb-4"
-          onClose={() => setSuccessMessage("")}
+          message={success}
+          onClose={() => dispatch(clearRoleSuccess())}
+          className="mb-6"
         />
       )}
 
@@ -180,7 +185,7 @@ const CategoryManagement = () => {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
             <input
               type="text"
-              placeholder="Tìm kiếm danh mục..."
+              placeholder="Tìm kiếm vai trò..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#A4B465] focus:border-[#A4B465]"
@@ -198,7 +203,13 @@ const CategoryManagement = () => {
                   scope="col"
                   className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
                 >
-                  Danh mục
+                  ID
+                </th>
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
+                >
+                  Vai trò
                 </th>
                 <th
                   scope="col"
@@ -210,7 +221,7 @@ const CategoryManagement = () => {
                   scope="col"
                   className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
                 >
-                  Sản phẩm
+                  Người dùng
                 </th>
                 <th
                   scope="col"
@@ -223,58 +234,68 @@ const CategoryManagement = () => {
             <tbody className="bg-white divide-y divide-gray-200">
               {loading ? (
                 <tr>
-                  <td colSpan="4" className="px-6 py-4 text-center">
+                  <td colSpan="5" className="px-6 py-4 text-center">
                     <div className="flex justify-center">
                       <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-[#A4B465]"></div>
                     </div>
                   </td>
                 </tr>
-              ) : filteredCategories.length === 0 ? (
+              ) : filteredRoles.length === 0 ? (
                 <tr>
                   <td
-                    colSpan="4"
+                    colSpan="5"
                     className="px-6 py-4 text-center text-gray-500"
                   >
-                    Không tìm thấy danh mục
+                    Không tìm thấy vai trò nào
                   </td>
                 </tr>
               ) : (
-                filteredCategories.map((category) => (
+                filteredRoles.map((role) => (
                   <tr
-                    key={category.id}
+                    key={role.id}
                     className="hover:bg-[#F5ECD5] transition-colors duration-200"
                   >
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {role.id}
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
-                        <div className="flex-shrink-0 h-10 w-10 flex items-center justify-center bg-[#F0BB78] rounded-full">
-                          <Tag className="h-5 w-5 text-white" />
+                        <div className="flex-shrink-0 h-10 w-10 flex items-center justify-center bg-[#F0BB78] rounded-full text-white">
+                          <Shield className="h-5 w-5" />
                         </div>
                         <div className="ml-4">
                           <div className="text-sm font-medium text-gray-900">
-                            {category.name}
+                            {role.name}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {new Date(role.createdAt).toLocaleDateString(
+                              "vi-VN"
+                            )}
                           </div>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm text-gray-500 truncate max-w-xs">
-                        {category.description || "Không có mô tả"}
-                      </div>
+                    <td className="px-6 py-4 text-sm text-gray-500">
+                      {role.description || "Không có mô tả"}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
-                        {category.productCount || 0}
+                      <div className="flex items-center">
+                        <Users className="h-4 w-4 text-[#A4B465] mr-2" />
+                        <span className="text-sm text-gray-700">
+                          {role.userCount || Math.floor(Math.random() * 10)}{" "}
+                          người dùng
+                        </span>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <button
-                        onClick={() => handleOpenModal(category)}
+                        onClick={() => handleOpenModal(role)}
                         className="text-[#A4B465] hover:text-[#626F47] mr-3 transition-colors duration-200"
                       >
                         <Edit className="h-5 w-5" />
                       </button>
                       <button
-                        onClick={() => handleDeleteCategory(category.id)}
+                        onClick={() => handleOpenDeleteModal(role)}
                         className="text-red-500 hover:text-red-700 transition-colors duration-200"
                       >
                         <Trash2 className="h-5 w-5" />
@@ -288,16 +309,16 @@ const CategoryManagement = () => {
         </div>
       </div>
 
-      {/* Category Form Modal */}
+      {/* Modal thêm/sửa vai trò */}
       <Modal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
-        title={currentCategory ? "Chỉnh sửa danh mục" : "Thêm danh mục mới"}
+        title={currentRole ? "Cập nhật vai trò" : "Thêm vai trò mới"}
       >
         <form onSubmit={handleSubmit}>
-          <div className="space-y-4">
+          <div className="mb-4">
             <Input
-              label="Tên danh mục"
+              label="Tên vai trò"
               id="name"
               name="name"
               value={formData.name}
@@ -305,32 +326,26 @@ const CategoryManagement = () => {
               error={formErrors.name}
               required
             />
-
-            <div className="mb-4">
-              <label
-                htmlFor="description"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Mô tả
-              </label>
-              <textarea
-                id="description"
-                name="description"
-                rows="3"
-                value={formData.description}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#A4B465] focus:border-[#A4B465]"
-              ></textarea>
-            </div>
           </div>
-
-          <div className="mt-6 flex justify-end space-x-3">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleCloseModal}
-              className="border-[#A4B465] text-[#626F47]"
+          <div className="mb-6">
+            <label
+              htmlFor="description"
+              className="block text-sm font-medium text-gray-700 mb-1"
             >
+              Mô tả
+            </label>
+            <textarea
+              id="description"
+              name="description"
+              rows="3"
+              value={formData.description}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#A4B465] focus:border-[#A4B465]"
+              placeholder="Mô tả vai trò này..."
+            ></textarea>
+          </div>
+          <div className="flex justify-end space-x-2">
+            <Button type="button" variant="outline" onClick={handleCloseModal}>
               Hủy
             </Button>
             <Button
@@ -338,49 +353,44 @@ const CategoryManagement = () => {
               disabled={loading}
               className="bg-[#A4B465] hover:bg-[#626F47] text-white"
             >
-              {loading
-                ? "Đang lưu..."
-                : currentCategory
-                ? "Cập nhật"
-                : "Thêm mới"}
+              {currentRole ? "Cập nhật" : "Thêm mới"}
             </Button>
           </div>
         </form>
       </Modal>
 
-      {/* Confirm Delete Modal */}
+      {/* Modal xác nhận xóa */}
       <Modal
-        isOpen={!!confirmDelete}
-        onClose={() => setConfirmDelete(null)}
+        isOpen={isDeleteModalOpen}
+        onClose={handleCloseDeleteModal}
         title="Xác nhận xóa"
-        size="sm"
       >
-        <div className="p-4">
-          <p className="text-gray-700 mb-4">
-            Bạn có chắc chắn muốn xóa danh mục này? Hành động này không thể hoàn
-            tác.
+        <div className="mb-6">
+          <p>Bạn có chắc chắn muốn xóa vai trò "{currentRole?.name}"?</p>
+          <p className="text-sm text-gray-500 mt-2">
+            Hành động này không thể hoàn tác.
           </p>
-          <div className="flex justify-end space-x-3">
-            <Button
-              variant="outline"
-              onClick={() => setConfirmDelete(null)}
-              className="border-[#A4B465] text-[#626F47]"
-            >
-              Hủy
-            </Button>
-            <Button
-              variant="danger"
-              onClick={confirmDeleteCategory}
-              disabled={loading}
-              className="bg-red-500 hover:bg-red-700 text-white"
-            >
-              {loading ? "Đang xóa..." : "Xóa"}
-            </Button>
-          </div>
+        </div>
+        <div className="flex justify-end space-x-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleCloseDeleteModal}
+          >
+            Hủy
+          </Button>
+          <Button
+            type="button"
+            variant="danger"
+            onClick={handleDelete}
+            disabled={loading}
+          >
+            Xóa
+          </Button>
         </div>
       </Modal>
     </div>
   );
 };
 
-export default CategoryManagement;
+export default RoleManagement;

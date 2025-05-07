@@ -8,7 +8,11 @@ import {
   useSearchParams,
 } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { login, clearError } from "../../store/slices/authSlice";
+import {
+  login,
+  clearError,
+  clearRedirectPath,
+} from "../../store/slices/authSlice";
 import Input from "../../components/ui/Input";
 import Button from "../../components/ui/Button";
 import Alert from "../../components/ui/Alert";
@@ -27,7 +31,7 @@ const Login = () => {
   const location = useLocation();
   const [searchParams] = useSearchParams();
 
-  const { loading, error, isAuthenticated } = useSelector(
+  const { loading, error, isAuthenticated, redirectPath } = useSelector(
     (state) => state.auth
   );
 
@@ -40,11 +44,11 @@ const Login = () => {
 
   // Redirect if already authenticated
   useEffect(() => {
-    if (isAuthenticated) {
-      const from = location.state?.from?.pathname || "/";
-      navigate(from, { replace: true });
+    if (isAuthenticated && redirectPath) {
+      navigate(redirectPath, { replace: true });
+      dispatch(clearRedirectPath());
     }
-  }, [isAuthenticated, navigate, location]);
+  }, [isAuthenticated, redirectPath, navigate, dispatch]);
 
   // Clear error when component unmounts
   useEffect(() => {

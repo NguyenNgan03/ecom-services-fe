@@ -4,20 +4,60 @@
  * @returns {object|null} - Payload của token hoặc null nếu token không hợp lệ
  */
 export const decodeToken = (token) => {
-  if (!token) return null;
+  if (!token) {
+    console.error("No token provided to decodeToken");
+    return null;
+  }
 
   try {
-    // JWT token có cấu trúc: header.payload.signature
-    const base64Url = token.split(".")[1];
-    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
-    const jsonPayload = decodeURIComponent(
-      atob(base64)
-        .split("")
-        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-        .join("")
-    );
+    // Kiểm tra token có đúng định dạng JWT không (header.payload.signature)
+    const parts = token.split(".");
+    if (parts.length !== 3) {
+      console.error(
+        "Invalid JWT format, expected 3 parts but got",
+        parts.length
+      );
+      return null;
+    }
 
-    return JSON.parse(jsonPayload);
+    // JWT token có cấu trúc: header.payload.signature
+    const base64Url = parts[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+
+    try {
+      // Thử decode base64
+      const jsonPayload = atob(base64);
+
+      // Parse JSON payload
+      try {
+        const payload = JSON.parse(jsonPayload);
+        console.log(
+          "Token decoded successfully, expires at:",
+          new Date(payload.exp * 1000).toLocaleString()
+        );
+        return payload;
+      } catch (jsonError) {
+        console.error("Error parsing JSON payload:", jsonError);
+        return null;
+      }
+    } catch (base64Error) {
+      console.error("Error decoding base64:", base64Error);
+
+      // Thử cách khác nếu atob() không hoạt động
+      try {
+        const jsonPayload = decodeURIComponent(
+          atob(base64)
+            .split("")
+            .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+            .join("")
+        );
+
+        return JSON.parse(jsonPayload);
+      } catch (fallbackError) {
+        console.error("Fallback decoding also failed:", fallbackError);
+        return null;
+      }
+    }
   } catch (error) {
     console.error("Error decoding JWT token:", error);
     return null;

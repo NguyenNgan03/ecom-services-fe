@@ -13,6 +13,7 @@ const ProductDetail = lazy(() => import("../pages/ProductDetail"));
 const CategoryProducts = lazy(() => import("../pages/CategoryProducts"));
 const Login = lazy(() => import("../pages/Login"));
 const Register = lazy(() => import("../pages/Register"));
+const Profile = lazy(() => import("../pages/Profile")); // Import trang Profile
 const NotFound = lazy(() => import("../pages/NotFound"));
 
 // Admin pages
@@ -26,10 +27,11 @@ const CategoryManagement = lazy(() =>
 const CustomerManagement = lazy(() =>
   import("../pages/Dashboard/CustomerManagement")
 );
+const RoleManagement = lazy(() => import("../pages/Dashboard/RoleManagement")); // Import trang quản lý vai trò
 
 const AppRoutes = () => {
   const { isAuthenticated, user } = useSelector((state) => state.auth);
-  const isAdmin = user?.role === "ADMIN";
+  const isAdmin = user?.role === "admin";
 
   return (
     <Suspense fallback={<LoadingSpinner />}>
@@ -48,13 +50,21 @@ const AppRoutes = () => {
           </Route>
         </Route>
 
+        {/* Private Routes - User */}
+        <Route element={<PrivateRoutes />}>
+          <Route element={<MainLayout />}>
+            <Route path="/profile" element={<Profile />} />
+          </Route>
+        </Route>
+
         {/* Private Routes - Admin Only */}
-       <Route element={<PublicRoutes />}>
+        <Route element={<PrivateRoutes allowedRoles={["ADMIN", "admin"]} />}>
           <Route element={<AdminLayout />}>
             <Route path="/admin" element={<Dashboard />} />
             <Route path="/admin/products" element={<ProductManagement />} />
             <Route path="/admin/categories" element={<CategoryManagement />} />
             <Route path="/admin/customers" element={<CustomerManagement />} />
+            <Route path="/admin/roles" element={<RoleManagement />} />
           </Route>
         </Route>
 

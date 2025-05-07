@@ -30,6 +30,12 @@ const reviewService = {
     const response = await api.delete(`/api/reviews/${reviewId}`);
     return response.data;
   },
+
+  // Lấy tất cả đánh giá của người dùng hiện tại
+  getUserReviews: async () => {
+    const response = await api.get(`/api/reviews/user`);
+    return response.data;
+  },
 };
 
 export default reviewService;

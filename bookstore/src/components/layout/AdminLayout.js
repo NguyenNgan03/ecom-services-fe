@@ -20,15 +20,15 @@ const AdminLayout = () => {
   }, [isAdmin, navigate]);
 
   return (
-    <div className="flex h-screen bg-gray-100">
-      <Sidebar />
-      <div className="flex flex-collex-1 overflow-hidden">
-        <AdminNavbar />
-        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 p-4">
+    <div className="flex flex-col h-screen bg-[#626F47]">
+      <AdminNavbar />
+      <div className="flex flex-1 overflow-hidden">
+        <Sidebar />
+        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-[#F5ECD5] p-4">
           <Outlet />
         </main>
-        <ToastContainer position="top-right" autoClose={3000} />
       </div>
+      <ToastContainer position="top-right" autoClose={3000} />
     </div>
   );
 };
